@@ -41,36 +41,6 @@ cat > /etc/sing-box/config.json <<EOF
 }
 EOF
 
-# 写入 subconverter 配置文件
-cat > /opt/singbox.json <<EOF
-{
-  "outbounds": [
-    {
-      "type": "vless",
-      "tag": "vless-reality-$IP",
-      "server": "$IP",
-      "server_port": 443,
-      "uuid": "$UUID",
-      "flow": "xtls-rprx-vision",
-      "tls": {
-        "enabled": true,
-        "server_name": "www.cloudflare.com",
-        "insecure": true,
-        "reality": {
-          "enabled": true,
-          "public_key": "$PUBLIC_KEY",
-          "short_id": "$SHORT_ID"
-        }
-      }
-    }
-  ]
-}
-EOF
-
-# 启动 sing-box
-systemctl enable sing-box
-systemctl restart sing-box
-
 # 安装 subconverter
 cd /opt
 if [ ! -d "subconverter" ]; then
@@ -80,6 +50,10 @@ if [ ! -d "subconverter" ]; then
     rm subconverter.tar.gz
 fi
 
+# 生成 VLESS 链接
+VLESS_URL="vless://$UUID@$IP:443?encryption=none&security=reality&fp=chrome&pbk=$PUBLIC_KEY&sid=$SHORT_ID&sni=www.cloudflare.com#vless-reality-$IP"
+VLESS_URL_ENCODED=$(echo "$VLESS_URL" | sed 's/ /%20/g')
+
 # 写入 subconverter systemd 服务文件
 cat > /etc/systemd/system/subconverter.service <<EOF
 [Unit]
@@ -87,7 +61,7 @@ Description=subconverter service
 After=network.target
 
 [Service]
-ExecStart=/opt/subconverter/subconverter -g /opt/singbox.json
+ExecStart=/opt/subconverter/subconverter -d -b 0.0.0.0:25500 -g $VLESS_URL_ENCODED
 WorkingDirectory=/opt/subconverter
 Restart=on-failure
 User=root
