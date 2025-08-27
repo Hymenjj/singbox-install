@@ -55,7 +55,6 @@ if [ ! -d "subconverter" ]; then
     LATEST_VERSION=$(curl -s "https://api.github.com/repos/tindy2013/subconverter/releases/latest" | jq -r '.tag_name')
     curl -fsSL "https://github.com/tindy2013/subconverter/releases/download/${LATEST_VERSION}/subconverter_linux64.tar.gz" -o subconverter.tar.gz
     tar -zxvf subconverter.tar.gz
-    mv subconverter_linux64 subconverter
     rm subconverter.tar.gz
 fi
 
