@@ -78,7 +78,7 @@ Description=VLESS Link Server
 After=network.target
 
 [Service]
-ExecStart=/usr/bin/python3 -m http.server 8080
+ExecStart=/usr/bin/python3 -m http.server --bind 0.0.0.0 8080
 WorkingDirectory=/var/www/vless
 Restart=on-failure
 User=root
