@@ -2,7 +2,7 @@
 set -e
 
 # 安装依赖
-apt update && apt install -y curl jq git sing-box
+apt update && apt install -y curl jq git sing-box python3-minimal
 
 # 生成参数
 UUID=$(sing-box generate uuid)
@@ -50,7 +50,7 @@ if [ ! -d "subconverter" ]; then
     rm subconverter.tar.gz
 fi
 
-# 写入 subconverter systemd 服务文件 (不带任何参数)
+# 写入 subconverter systemd 服务文件
 cat > /etc/systemd/system/subconverter.service <<EOF
 [Unit]
 Description=subconverter service
@@ -66,12 +66,32 @@ User=root
 WantedBy=multi-user.target
 EOF
 
+# 创建 VLESS 文件
+mkdir -p /var/www/vless
+VLESS_URL_RAW="vless://$UUID@$IP:443?encryption=none&security=reality&fp=chrome&pbk=$PUBLIC_KEY&sid=$SHORT_ID&sni=www.cloudflare.com"
+echo "$VLESS_URL_RAW" > /var/www/vless/vless.txt
+
+# 写入 python 轻量级服务器 systemd 服务文件
+cat > /etc/systemd/system/vless-server.service <<EOF
+[Unit]
+Description=VLESS Link Server
+After=network.target
+
+[Service]
+ExecStart=/usr/bin/python3 -m http.server 8080
+WorkingDirectory=/var/www/vless
+Restart=on-failure
+User=root
+
+[Install]
+WantedBy=multi-user.target
+EOF
+
 systemctl daemon-reload
-systemctl enable subconverter
-systemctl start subconverter
+systemctl enable sing-box subconverter vless-server
+systemctl restart sing-box subconverter vless-server
 
 # 输出信息
-VLESS_URL_RAW="vless://$UUID@$IP:443?encryption=none&security=reality&fp=chrome&pbk=$PUBLIC_KEY&sid=$SHORT_ID&sni=www.cloudflare.com"
 VLESS_URL_ENCODED=$(echo "$VLESS_URL_RAW" | sed 's/ /%20/g')
 
 echo -e "\n✅ Sing-box 已安装并运行"
@@ -82,5 +102,5 @@ echo "Short ID:    $SHORT_ID"
 echo "VPS IP:      $IP"
 echo "-----------------------------------"
 echo "Clash 订阅链接:"
-echo "http://$IP:25500/sub?target=clash&url=$VLESS_URL_ENCODED"
+echo "http://$IP:25500/sub?target=clash&url=http://$IP:8080/vless.txt"
 echo "-----------------------------------"
