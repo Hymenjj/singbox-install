@@ -31,6 +31,12 @@ cat > /etc/sing-box/config.json <<EOF
           "short_id": ["$SHORT_ID"]
         }
       }
+    },
+    {
+      "type": "api",
+      "listen": "127.0.0.1",
+      "listen_port": 8080,
+      "tag": "api"
     }
   ],
   "outbounds": [
@@ -45,22 +51,15 @@ systemctl enable sing-box
 systemctl restart sing-box
 
 # 安装 subconverter
-
-# ================================
-# 6. 安装 subconverter
-# ================================
 cd /opt
 if [ ! -d "subconverter" ]; then
-    # 从 GitHub Releases 下载最新版 subconverter
     LATEST_VERSION=$(curl -s "https://api.github.com/repos/tindy2013/subconverter/releases/latest" | jq -r '.tag_name')
     curl -fsSL "https://github.com/tindy2013/subconverter/releases/download/${LATEST_VERSION}/subconverter_linux64.tar.gz" -o subconverter.tar.gz
     tar -zxvf subconverter.tar.gz
     rm subconverter.tar.gz
 fi
 
-# ================================
-# 7. 写入 subconverter systemd 服务文件
-# ================================
+# 写入 subconverter systemd 服务文件
 cat > /etc/systemd/system/subconverter.service <<EOF
 [Unit]
 Description=subconverter service
@@ -90,5 +89,5 @@ echo "Short ID:    $SHORT_ID"
 echo "VPS IP:      $IP"
 echo "-----------------------------------"
 echo "Clash 订阅链接:"
-echo "http://$IP:25500/sub?target=clash"
+echo "http://$IP:25500/sub?target=clash&url=http://$IP:8080/api/nodes"
 echo "-----------------------------------"
