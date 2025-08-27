@@ -45,6 +45,7 @@ systemctl enable sing-box
 systemctl restart sing-box
 
 # 安装 subconverter
+
 # ================================
 # 6. 安装 subconverter
 # ================================
@@ -52,9 +53,9 @@ cd /opt
 if [ ! -d "subconverter" ]; then
     # 从 GitHub Releases 下载最新版 subconverter
     LATEST_VERSION=$(curl -s "https://api.github.com/repos/tindy2013/subconverter/releases/latest" | jq -r '.tag_name')
-    curl -fsSL "curl -fsSL "https://github.com/tindy2013/subconverter/releases/download/${LATEST_VERSION}/subconverter_linux64.tar.gz" -o subconverter.tar.gz" -o subconverter.tar.gz
+    curl -fsSL "https://github.com/tindy2013/subconverter/releases/download/${LATEST_VERSION}/subconverter_linux64.tar.gz" -o subconverter.tar.gz
     tar -zxvf subconverter.tar.gz
-    mv subconverter-linux64 subconverter
+    mv subconverter_linux64 subconverter
     rm subconverter.tar.gz
 fi
 
