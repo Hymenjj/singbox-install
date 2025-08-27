@@ -45,12 +45,40 @@ systemctl enable sing-box
 systemctl restart sing-box
 
 # 安装 subconverter
+# ================================
+# 6. 安装 subconverter
+# ================================
 cd /opt
 if [ ! -d "subconverter" ]; then
-  git clone https://github.com/tindy2013/subconverter.git
+    # 从 GitHub Releases 下载最新版 subconverter
+    LATEST_VERSION=$(curl -s "https://api.github.com/repos/tindy2013/subconverter/releases/latest" | jq -r '.tag_name')
+    curl -fsSL "https://github.com/tindy2013/subconverter/releases/download/${LATEST_VERSION}/subconverter-linux64.tar.gz" -o subconverter.tar.gz
+    tar -zxvf subconverter.tar.gz
+    mv subconverter-linux64 subconverter
+    rm subconverter.tar.gz
 fi
-cd subconverter
-./subconverter >/dev/null 2>&1 &
+
+# ================================
+# 7. 写入 subconverter systemd 服务文件
+# ================================
+cat > /etc/systemd/system/subconverter.service <<EOF
+[Unit]
+Description=subconverter service
+After=network.target
+
+[Service]
+ExecStart=/opt/subconverter/subconverter
+WorkingDirectory=/opt/subconverter
+Restart=on-failure
+User=root
+
+[Install]
+WantedBy=multi-user.target
+EOF
+
+systemctl daemon-reload
+systemctl enable subconverter
+systemctl start subconverter
 
 # 输出信息
 IP=$(curl -s ifconfig.me)
