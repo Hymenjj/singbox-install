@@ -50,18 +50,14 @@ if [ ! -d "subconverter" ]; then
     rm subconverter.tar.gz
 fi
 
-# 生成 VLESS 链接
-VLESS_URL="vless://$UUID@$IP:443?encryption=none&security=reality&fp=chrome&pbk=$PUBLIC_KEY&sid=$SHORT_ID&sni=www.cloudflare.com#vless-reality-$IP"
-VLESS_URL_ENCODED=$(echo "$VLESS_URL" | sed 's/ /%20/g')
-
-# 写入 subconverter systemd 服务文件
+# 写入 subconverter systemd 服务文件 (不带任何参数)
 cat > /etc/systemd/system/subconverter.service <<EOF
 [Unit]
 Description=subconverter service
 After=network.target
 
 [Service]
-ExecStart=/opt/subconverter/subconverter -d -b 0.0.0.0:25500 -g $VLESS_URL_ENCODED
+ExecStart=/opt/subconverter/subconverter
 WorkingDirectory=/opt/subconverter
 Restart=on-failure
 User=root
@@ -75,6 +71,9 @@ systemctl enable subconverter
 systemctl start subconverter
 
 # 输出信息
+VLESS_URL_RAW="vless://$UUID@$IP:443?encryption=none&security=reality&fp=chrome&pbk=$PUBLIC_KEY&sid=$SHORT_ID&sni=www.cloudflare.com"
+VLESS_URL_ENCODED=$(echo "$VLESS_URL_RAW" | sed 's/ /%20/g')
+
 echo -e "\n✅ Sing-box 已安装并运行"
 echo "-----------------------------------"
 echo "UUID:        $UUID"
@@ -83,5 +82,5 @@ echo "Short ID:    $SHORT_ID"
 echo "VPS IP:      $IP"
 echo "-----------------------------------"
 echo "Clash 订阅链接:"
-echo "http://$IP:25500/sub?target=clash"
+echo "http://$IP:25500/sub?target=clash&url=$VLESS_URL_ENCODED"
 echo "-----------------------------------"
